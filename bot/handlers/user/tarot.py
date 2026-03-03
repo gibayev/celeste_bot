@@ -6,6 +6,7 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, FSInputFile, InputMediaPhoto
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
+from db.crud import get_or_create_user
 
 from bot.keyboards.inline import get_categories_kb, get_spreads_by_category_kb, get_decks_kb
 from services.tarot_engine import draw_cards
@@ -58,7 +59,15 @@ async def process_spread(callback: CallbackQuery, state: FSMContext):
     spread_id = callback.data.replace("spread_", "")
     spread_info = SPREADS.get(spread_id)
 
-    if spread_info["is_premium"]:
+    # Идем в базу данных и смотрим статус текущего пользователя
+    db_user, _ = await get_or_create_user(
+        telegram_id=callback.from_user.id,
+        username=callback.from_user.username,
+        full_name=callback.from_user.full_name
+    )
+
+    # Если расклад премиальный, А юзер НЕ премиум — блокируем
+    if spread_info["is_premium"] and not db_user.is_premium:
         await callback.answer("👑 Этот расклад доступен только по Premium подписке!", show_alert=True)
         return
 
@@ -77,7 +86,15 @@ async def process_deck(callback: CallbackQuery, state: FSMContext):
     deck_id = callback.data.replace("deck_", "")
     deck_info = DECKS.get(deck_id)
 
-    if deck_info["is_premium"]:
+    # Идем в базу данных и смотрим статус текущего пользователя
+    db_user, _ = await get_or_create_user(
+        telegram_id=callback.from_user.id,
+        username=callback.from_user.username,
+        full_name=callback.from_user.full_name
+    )
+
+    # Если колода премиальная, А юзер НЕ премиум — блокируем
+    if deck_info["is_premium"] and not db_user.is_premium:
         await callback.answer("👑 Эта колода доступна только по Premium подписке!", show_alert=True)
         return
 
