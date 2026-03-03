@@ -45,13 +45,13 @@ async def process_category(callback: CallbackQuery, state: FSMContext):
     if cat_id == "custom":
         db_user, _ = await get_or_create_user(callback.from_user.id, callback.from_user.username, callback.from_user.full_name)
         if not db_user.is_premium:
-            await callback.answer("👑 Свой вопрос с ИИ-анализом доступен только по Premium подписке!", show_alert=True)
+            await callback.answer("Прямой диалог с Оракулом и личные вопросы доступны только по Premium подписке!", show_alert=True)
             return
         
         await state.set_state(TarotFSM.entering_custom_question)
         await callback.message.edit_text(
             "✍️ <b>Напиши свой вопрос картам.</b>\n\n"
-            "Чем подробнее ты опишешь ситуацию, тем точнее Селеста подберет колоду и количество карт.\n\n"
+            "Чем подробнее ты опишешь ситуацию, тем точнее я смогу подобрать нужную колоду и прочитать послание звезд.\n\n"
             "<i>Пример: «Стоит ли мне переезжать в другой город ради новой работы, или лучше остаться?»</i>"
         )
         return

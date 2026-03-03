@@ -12,6 +12,7 @@ from db.database import engine, Base
 from bot.handlers.user.start import router as start_router
 from bot.handlers.user.tarot import router as tarot_router
 from bot.keyboards.set_menu import set_main_menu
+from bot.handlers.payments import router as payments_router
 
 # Загружаем переменные из .env
 load_dotenv()
@@ -43,6 +44,8 @@ async def main():
     dp.include_router(start_router)
     # Подключаем роутер с командами для расклада Таро
     dp.include_router(tarot_router)
+
+    dp.include_router(payments_router)
     
     # 1. Сначала запускаем базу данных
     await init_db()
