@@ -150,4 +150,4 @@ async def back_to_spreads(callback: CallbackQuery, state: FSMContext):
     cat_id = user_data.get("category_id", "general")
     
     await state.set_state(TarotFSM.choosing_spread)
-    await callback.message.edit_text("Отлично. Теперь выбери подходящий расклад:", reply_markup=get_spreads_by_category_kb(cat_id))`
+    await callback.message.edit_text("Отлично. Теперь выбери подходящий расклад:", reply_markup=get_spreads_by_category_kb(cat_id))
