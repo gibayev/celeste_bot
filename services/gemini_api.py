@@ -1,4 +1,5 @@
 import os
+import json
 from google import genai
 from dotenv import load_dotenv
 
@@ -58,3 +59,39 @@ async def generate_tarot_reading(spread_name: str, deck_name: str, cards: list, 
         return cleaned_text
     except Exception as e:
         return f"Упс... Звезды сейчас скрыты за облаками, и я не могу прочитать эти карты. 🌌\n\n(Техническая ошибка: {e})"
+
+
+async def analyze_custom_question(question: str) -> dict:
+    """Анализирует кастомный вопрос и возвращает рекомендации."""
+    prompt = f"""
+    Пользователь задает свой личный вопрос для расклада Таро: "{question}"
+    Проанализируй суть вопроса и порекомендуй:
+    1. Какую колоду использовать? Выбери строго один из ключей:
+       - "waite" (Таро Уэйта - работа, будущее, общие ситуации, деньги)
+       - "thoth" (Таро Тота - глубокая психология, карма, скрытые мотивы, сложный выбор)
+       - "manara" (Таро Манара - строго любовь, отношения, страсть, измены, чувства)
+    2. Сколько карт достать? Выбери строго одно число (1, 3, 5 или 10). 
+       1 - простой совет на день; 3 - прошлое/настоящее/будущее или выбор из двух; 5 - глубокий анализ ситуации; 10 - Кельтский крест для судьбоносных вопросов.
+
+    Ответь СТРОГО в формате JSON без markdown разметки:
+    {{"deck": "id_колоды", "count": число}}
+    """
+    try:
+        response = await client.aio.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt
+        )
+        # Очищаем ответ от лишних символов, если нейросеть добавила теги ```json
+        text = response.text.strip().replace("```json", "").replace("```", "").strip()
+        result = json.loads(text)
+        
+        # Подстраховка (чтобы бот не упал, если ИИ ошибся в названиях)
+        if result.get("deck") not in ["waite", "thoth", "manara"]:
+            result["deck"] = "waite"
+        if result.get("count") not in [1, 3, 5, 10]:
+            result["count"] = 3
+            
+        return result
+    except Exception as e:
+        print(f"Ошибка анализатора: {e}")
+        return {"deck": "waite", "count": 3} # Дефолт при ошибке    

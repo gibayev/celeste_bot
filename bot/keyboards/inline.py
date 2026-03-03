@@ -35,3 +35,24 @@ def get_decks_kb() -> InlineKeyboardMarkup:
         ))
     builder.row(InlineKeyboardButton(text="⬅️ Назад к раскладам", callback_data="back_to_spreads"))
     return builder.as_markup()
+
+def get_ai_recommendation_kb(deck_id: str, count: int) -> InlineKeyboardMarkup:
+    """Кнопки после того, как ИИ порекомендовал расклад"""
+    builder = InlineKeyboardBuilder()
+    # В callback_data зашиваем ID колоды и количество карт
+    builder.row(InlineKeyboardButton(text="✨ Использовать рекомендацию", callback_data=f"ai_accept_{deck_id}_{count}"))
+    builder.row(InlineKeyboardButton(text="⚙️ Выбрать другую комбинацию", callback_data="ai_manual"))
+    return builder.as_markup()
+
+def get_custom_card_count_kb() -> InlineKeyboardMarkup:
+    """Ручной выбор количества карт для своего вопроса"""
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text="1 карта", callback_data="ccount_1"),
+        InlineKeyboardButton(text="3 карты", callback_data="ccount_3")
+    )
+    builder.row(
+        InlineKeyboardButton(text="5 карт", callback_data="ccount_5"),
+        InlineKeyboardButton(text="10 карт", callback_data="ccount_10")
+    )
+    return builder.as_markup()
