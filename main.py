@@ -10,6 +10,7 @@ from aiogram.enums import ParseMode
 # Импортируем базу данных и наш роутер
 from db.database import engine, Base
 from bot.handlers.user.start import router as start_router
+from bot.handlers.user.tarot import router as tarot_router
 from bot.keyboards.set_menu import set_main_menu
 
 # Загружаем переменные из .env
@@ -40,6 +41,8 @@ async def main():
     
     # Подключаем наш роутер с командой /start
     dp.include_router(start_router)
+    # Подключаем роутер с командами для расклада Таро
+    dp.include_router(tarot_router)
     
     # 1. Сначала запускаем базу данных
     await init_db()
