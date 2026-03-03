@@ -3,10 +3,10 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 from bot.keyboards.reply import get_main_menu
 
-# Импортируем нашу функцию для работы с БД
-from db.crud import get_or_create_user
+# Импортируем наши функции для работы с БД (ОБЕ ФУНКЦИИ НАВЕРХУ)
+from db.crud import get_or_create_user, set_user_premium
 
-# Создаем роутер (это как отдельный маршрутизатор для этой части логики)
+# Создаем роутер
 router = Router()
 
 @router.message(CommandStart())
@@ -34,8 +34,6 @@ async def cmd_start(message: Message):
         
     # Отправляем сообщение и прикрепляем клавиатуру
     await message.answer(text, reply_markup=get_main_menu())
-
-    from db.crud import set_user_premium
 
 # Секретная команда для разработчика
 @router.message(F.text == "Селеста, дай мне силу")

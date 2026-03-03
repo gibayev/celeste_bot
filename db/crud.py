@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, update
 from db.database import async_session
 from db.models import User
 
@@ -23,8 +23,6 @@ async def get_or_create_user(telegram_id: int, username: str | None, full_name: 
             return user, True # True означает, что юзер новый
         
         return user, False # False означает, что юзер уже был в базе
-    
-    from sqlalchemy import update
 
 async def set_user_premium(telegram_id: int, is_premium: bool = True):
     """Меняет статус подписки пользователя"""
