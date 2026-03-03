@@ -1,3 +1,6 @@
+import io
+from PIL import Image
+from aiogram.types import BufferedInputFile
 import asyncio
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, FSInputFile, InputMediaPhoto
@@ -7,6 +10,8 @@ from aiogram.fsm.state import StatesGroup, State
 from bot.keyboards.inline import get_categories_kb, get_spreads_by_category_kb, get_decks_kb
 from services.tarot_engine import draw_cards
 from data.tarot_deck import SPREADS, DECKS
+from services.gemini_api import generate_tarot_reading
+from data.tarot_deck import CATEGORIES # <--- добавили CATEGORIES
 
 router = Router()
 
@@ -79,31 +84,58 @@ async def process_deck(callback: CallbackQuery, state: FSMContext):
     # Достаем данные, которые мы сохраняли на предыдущих шагах
     user_data = await state.get_data()
     spread_id = user_data["spread_id"]
+    category_id = user_data["category_id"] # Достаем ID темы
+    
     spread_info = SPREADS.get(spread_id)
+    category_name = CATEGORIES.get(category_id, "Общие вопросы") # Получаем красивое название темы
 
-    # Завершаем FSM (очищаем память состояний)
+    # Завершаем FSM
     await state.clear()
 
     await callback.message.edit_text(f"⏳ <i>Тасую колоду «{deck_info['name']}» для расклада «{spread_info['name']}»...</i>")
     await asyncio.sleep(1.5)
 
-    # Используем наш движок. Обрати внимание, мы передаем deck_id
+    # 1. Тянем карты
     cards = draw_cards(spread_info["cards_count"], deck_id=deck_id)
 
+    # 2. Формируем картинки (с переворотом на лету, если нужно)
     media = []
     for card in cards:
-        # Если бот упадет тут с ошибкой, значит он не нашел картинку по указанному пути!
-        media.append(InputMediaPhoto(media=FSInputFile(card["image_path"])))
-
-    text_result = f"🔮 <b>Твой расклад: {spread_info['name']}</b>\nКолода: {deck_info['name']}\n\n"
-    for i, card in enumerate(cards, 1):
-        text_result += f"Карта {i}: <b>{card['full_name']}</b>\n"
-        
-    text_result += "\n<i>(Скоро здесь будет трактовка ИИ...)</i>"
-
+        if card.get("is_reversed"):
+            # Открываем картинку с диска
+            with Image.open(card["image_path"]) as img:
+                # Переворачиваем на 180 градусов
+                rotated_img = img.rotate(180)
+                
+                # Создаем виртуальный файл в оперативной памяти
+                img_byte_arr = io.BytesIO()
+                rotated_img.save(img_byte_arr, format='JPEG')
+                img_byte_arr.seek(0)
+                
+                # Отправляем виртуальный файл (BufferedInputFile вместо FSInputFile)
+                filename = card["image_path"].split("/")[-1]
+                media.append(InputMediaPhoto(media=BufferedInputFile(img_byte_arr.read(), filename=f"rev_{filename}")))
+        else:
+            # Если карта прямая, отправляем как обычно прямо с диска
+            media.append(InputMediaPhoto(media=FSInputFile(card["image_path"])))
+    # 3. Отправляем альбом и временное сообщение о том, что ИИ думает
     await callback.message.answer_media_group(media=media)
-    await callback.message.answer(text_result)
-    await callback.answer()
+    
+    thinking_msg = await callback.message.answer(
+        "✨ <i>Селеста вглядывается в карты и слушает шепот звезд... (Генерирую ответ)</i>"
+    )
+    await callback.answer() # Закрываем часики на кнопке
+
+    # 4. Обращаемся к Gemini за трактовкой
+    reading_text = await generate_tarot_reading(
+        spread_name=spread_info['name'],
+        deck_name=deck_info['name'],
+        cards=cards,
+        category_name=category_name
+    )
+
+    # 5. Заменяем временное сообщение на красивую готовую трактовку
+    await thinking_msg.edit_text(reading_text)
 
 # --- КНОПКИ НАЗАД ---
 @router.callback_query(F.data == "back_to_categories")
@@ -118,4 +150,4 @@ async def back_to_spreads(callback: CallbackQuery, state: FSMContext):
     cat_id = user_data.get("category_id", "general")
     
     await state.set_state(TarotFSM.choosing_spread)
-    await callback.message.edit_text("Отлично. Теперь выбери подходящий расклад:", reply_markup=get_spreads_by_category_kb(cat_id))
+    await callback.message.edit_text("Отлично. Теперь выбери подходящий расклад:", reply_markup=get_spreads_by_category_kb(cat_id))`
