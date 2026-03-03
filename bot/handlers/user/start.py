@@ -34,3 +34,17 @@ async def cmd_start(message: Message):
         
     # Отправляем сообщение и прикрепляем клавиатуру
     await message.answer(text, reply_markup=get_main_menu())
+
+    from db.crud import set_user_premium
+
+# Секретная команда для разработчика
+@router.message(F.text == "Селеста, дай мне силу")
+async def secret_premium_command(message: Message):
+    # Выдаем статус в БД
+    await set_user_premium(message.from_user.id, is_premium=True)
+    
+    await message.answer(
+        "✨ <b>Тайные знания открыты!</b>\n\n"
+        "Теперь ты Premium-пользователь. Тебе доступны все колоды и глубокие расклады.",
+        show_alert=True
+    )
