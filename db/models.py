@@ -10,12 +10,20 @@ class User(Base):
     telegram_id = Column(BigInteger, unique=True)
     username = Column(String)
     full_name = Column(String)
+    
+    # Статус подписки
     is_premium = Column(Boolean, default=False)
     premium_until = Column(DateTime, nullable=True)
+    
+    # Статистика и активность
     created_at = Column(DateTime, default=datetime.now)
-    last_active = Column(DateTime, default=datetime.now) # <--- Новое поле активности
+    last_active = Column(DateTime, default=datetime.now)
+    
+    # Лимиты вопросов (НОВОЕ)
+    daily_limit_count = Column(Integer, default=0)
+    last_limit_reset = Column(DateTime, default=datetime.now)
 
-# Новая таблица для учета доходов
+# Таблица для учета доходов (Звезды)
 class Payment(Base):
     __tablename__ = 'payments'
     id = Column(Integer, primary_key=True)

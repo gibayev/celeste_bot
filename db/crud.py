@@ -4,6 +4,7 @@ from db.models import User, Payment
 from datetime import datetime, timedelta
 
 async def get_or_create_user(telegram_id: int, username: str | None, full_name: str | None):
+    """Находит или создает пользователя, обновляя время его активности"""
     async with async_session() as session:
         query = select(User).where(User.telegram_id == telegram_id)
         result = await session.execute(query)
@@ -16,26 +17,55 @@ async def get_or_create_user(telegram_id: int, username: str | None, full_name: 
             await session.refresh(user)
             return user, True
         else:
-            # Юзер зашел - обновляем его время активности
+            # Обновляем время последнего входа
             user.last_active = datetime.now()
             await session.commit()
             return user, False
+
+async def check_and_update_limit(telegram_id: int) -> bool:
+    """
+    Проверяет дневной лимит вопросов. 
+    Возвращает True, если лимит не исчерпан, и увеличивает счетчик.
+    """
+    async with async_session() as session:
+        query = select(User).where(User.telegram_id == telegram_id)
+        result = await session.execute(query)
+        user = result.scalar_one_or_none()
+
+        if not user:
+            return False
+
+        now = datetime.now()
         
+        # 1. Проверяем, нужно ли сбросить счетчик (если наступил новый календарный день)
+        if user.last_limit_reset.date() < now.date():
+            user.daily_limit_count = 0
+            user.last_limit_reset = now
+
+        # 2. Определяем порог лимита
+        # Обычный юзер: 2 вопроса | Premium: 15 вопросов
+        max_limit = 15 if user.is_premium else 2
+
+        # 3. Проверяем доступность
+        if user.daily_limit_count < max_limit:
+            user.daily_limit_count += 1
+            await session.commit()
+            return True
+        
+        return False
 
 async def set_user_premium(telegram_id: int, is_premium: bool = True, days: int = 30):
-    """Выдает или продлевает подписку пользователя"""
+    """Выдает, продлевает или забирает Premium статус"""
     async with async_session() as session:
-        # Сначала находим пользователя, чтобы узнать его текущий статус
         query = select(User).where(User.telegram_id == telegram_id)
         result = await session.execute(query)
         user = result.scalar_one_or_none()
 
         if user:
             if is_premium:
-                # Если подписка УЖЕ активна, прибавляем дни к остатку
+                # Если подписка еще активна — прибавляем дни, если нет — считаем от сейчас
                 if user.premium_until and user.premium_until > datetime.now():
                     new_until = user.premium_until + timedelta(days=days)
-                # Если подписки не было или она истекла, считаем от сегодня
                 else:
                     new_until = datetime.now() + timedelta(days=days)
                 
@@ -44,7 +74,7 @@ async def set_user_premium(telegram_id: int, is_premium: bool = True, days: int 
                     premium_until=new_until
                 )
             else:
-                # Забираем подписку
+                # Отключаем премиум
                 stmt = update(User).where(User.telegram_id == telegram_id).values(
                     is_premium=False, 
                     premium_until=None
@@ -54,8 +84,8 @@ async def set_user_premium(telegram_id: int, is_premium: bool = True, days: int 
             await session.commit()
 
 async def log_payment(telegram_id: int, amount_stars: int):
-    """Записывает доход в базу"""
+    """Фиксирует транзакцию в таблице платежей"""
     async with async_session() as session:
         payment = Payment(telegram_id=telegram_id, amount_stars=amount_stars)
         session.add(payment)
-        await session.commit()            
+        await session.commit()
