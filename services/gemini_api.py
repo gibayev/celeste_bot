@@ -59,7 +59,7 @@ async def generate_tarot_reading(spread_name: str, deck_name: str, cards: list, 
 
     try:
         response = await client.aio.models.generate_content(
-            model='gemini-3.0-flash', # Оптимально для скорости и логики
+            model='gemini-2.5-flash', # Оптимально для скорости и логики
             contents=prompt
         )
         
@@ -95,7 +95,7 @@ async def analyze_custom_question(question: str) -> dict:
 
     try:
         response = await client.aio.models.generate_content(
-            model='gemini-3.0-flash',
+            model='gemini-2.5-flash',
             contents=prompt
         )
         # Убираем возможный markdown
