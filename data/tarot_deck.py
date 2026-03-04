@@ -7,60 +7,38 @@ DECKS = {
     }
 }
 
-# --- КАТЕГОРИИ РАСКЛАДОВ ---
 CATEGORIES = {
     "general": "🌌 Общие вопросы",
     "love": "❤️ Любовь и Отношения",
     "career": "💼 Работа и Финансы",
+    "health": "🌿 Здоровье и Энергия",
+    "timing": "⏳ Вопросы «Когда?»",
     "custom": "✍️ Свой вопрос (Premium)"
 }
 
-# --- ВИДЫ РАСКЛАДОВ ---
 SPREADS = {
     # Общие
-    "day_1": {
-        "category": "general",
-        "name": "Карта дня",
-        "cards_count": 1,
-        "is_premium": False,
-        "recommended_deck": "waite"
-    },
-    "past_present_future": {
-        "category": "general",
-        "name": "Прошлое, Настоящее, Будущее",
-        "cards_count": 3,
-        "is_premium": False,
-        "recommended_deck": "waite"
-    },
-    "celtic_cross": {
-        "category": "general",
-        "name": "Кельтский крест (10 карт)",
-        "cards_count": 10,
-        "is_premium": True,
-        "recommended_deck": "thoth"
-    },
+    "day_1": {"category": "general", "name": "Карта дня", "cards_count": 1, "is_premium": False},
+    "past_present_future": {"category": "general", "name": "Прошлое/Настоящее/Будущее", "cards_count": 3, "is_premium": False},
+    
     # Любовь
-    "love_3": {
-        "category": "love",
-        "name": "Мысли, Чувства, Действия",
-        "cards_count": 3,
-        "is_premium": False,
-        "recommended_deck": "manara"
-    },
-    "new_love_5": {
-        "category": "love",
-        "name": "Перспективы новых отношений",
-        "cards_count": 5,
+    "love_3": {"category": "love", "name": "Мысли/Чувства/Действия", "cards_count": 3, "is_premium": False},
+    "relationship_prospects": {"category": "love", "name": "Перспективы союза", "cards_count": 5, "is_premium": True},
+    
+    # Работа и деньги
+    "career_path": {"category": "career", "name": "Развитие карьеры", "cards_count": 3, "is_premium": False},
+    "money_flow": {"category": "career", "name": "Денежный поток", "cards_count": 4, "is_premium": True},
+    
+    # Здоровье
+    "health_state": {"category": "health", "name": "Общее состояние", "cards_count": 3, "is_premium": False},
+
+    # ТАЙМИНГ (То, что ты просил)
+    "when_it_happens": {
+        "category": "timing", 
+        "name": "Когда это произойдет?", 
+        "cards_count": 1, 
         "is_premium": True,
-        "recommended_deck": "manara"
-    },
-    # Работа
-    "career_path": {
-        "category": "career",
-        "name": "Выбор пути",
-        "cards_count": 3,
-        "is_premium": False,
-        "recommended_deck": "waite"
+        "description": "Расклад на одну карту для определения сроков."
     }
 }
 
