@@ -56,3 +56,16 @@ def get_custom_card_count_kb() -> InlineKeyboardMarkup:
         InlineKeyboardButton(text="10 карт", callback_data="ccount_10")
     )
     return builder.as_markup()
+
+def get_premium_plans_kb() -> InlineKeyboardMarkup:
+    """Клавиатура с тарифами Premium"""
+    builder = InlineKeyboardBuilder()
+    
+    # В callback_data зашиваем количество дней (buy_premium_ДНИ)
+    builder.row(InlineKeyboardButton(text="1 неделя (1 ⭐️)", callback_data="buy_premium_7"))
+    builder.row(InlineKeyboardButton(text="1 месяц (150 ⭐️)", callback_data="buy_premium_30"))
+    builder.row(InlineKeyboardButton(text="3 месяца (400 ⭐️) 🔥", callback_data="buy_premium_90"))
+    builder.row(InlineKeyboardButton(text="6 месяцев (750 ⭐️) 💎", callback_data="buy_premium_180"))
+    builder.row(InlineKeyboardButton(text="1 год (1400 ⭐️) 👑", callback_data="buy_premium_365"))
+    
+    return builder.as_markup()

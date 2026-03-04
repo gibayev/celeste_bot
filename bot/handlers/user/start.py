@@ -46,3 +46,16 @@ async def secret_premium_command(message: Message):
         "Теперь ты Premium-пользователь. Тебе доступны все колоды и глубокие расклады.",
         show_alert=True
     )
+
+# Секретная команда для снятия подписки (для тестов)
+@router.message(F.text == "Селеста, забери силу")
+async def secret_remove_premium(message: Message):
+    # Устанавливаем is_premium = False. 
+    # Наша функция set_user_premium автоматически обнулит дату!
+    await set_user_premium(message.from_user.id, is_premium=False)
+    
+    await message.answer(
+        "📉 <b>Связь с Космосом прервана...</b>\n\n"
+        "Твоя Premium-подписка аннулирована. Теперь ты обычный смертный.",
+        show_alert=True
+    )    
