@@ -15,6 +15,10 @@ from data.tarot_deck import SPREADS, DECKS
 from services.gemini_api import generate_tarot_reading, analyze_custom_question
 from data.tarot_deck import CATEGORIES 
 
+def split_message(text, max_length=4000):
+    """Режет текст на куски, не разрывая HTML-теги (грубо)"""
+    return [text[i:i+max_length] for i in range(0, len(text), max_length)]
+
 router = Router()
 
 class TarotFSM(StatesGroup):
@@ -253,4 +257,12 @@ async def generate_custom_reading(callback: CallbackQuery, state: FSMContext, de
         category_name="Индивидуальный вопрос"
     )
     
-    await thinking_msg.edit_text(reading_text)
+    if len(reading_text) <= 4096:
+        await thinking_msg.edit_text(reading_text)
+    else:
+        # Если текст слишком длинный, редактируем первое сообщение первой частью
+        parts = split_message(reading_text)
+        await thinking_msg.edit_text(parts[0])
+        # Остальные части шлем новыми сообщениями
+        for part in parts[1:]:
+            await callback.message.answer(part)
