@@ -17,7 +17,7 @@ async def send_premium_invoice(message: Message, bot: Bot):
         description="Открой все тайны: премиальные колоды (Тота, Манара), судьбоносные расклады на 10 карт и возможность задать свой сокровенный вопрос напрямую Оракулу!",
         payload="premium_30_days", # Внутренний код нашего товара
         provider_token="", # Для Telegram Stars токен провайдера должен быть пустым!
-        currency="XTD",
+        currency="XTR",
         prices=prices,
         # Опционально: можно добавить красивую картинку для чека
         # photo_url="ссылка_на_картинку_премиума.jpg" 
