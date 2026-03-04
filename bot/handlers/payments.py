@@ -1,6 +1,6 @@
 from aiogram import Router, F, Bot
 from aiogram.types import Message, CallbackQuery, LabeledPrice, PreCheckoutQuery
-from db.crud import get_or_create_user, set_user_premium
+from db.crud import get_or_create_user, set_user_premium, log_payment
 from bot.keyboards.inline import get_premium_plans_kb
 from datetime import datetime
 
@@ -85,6 +85,7 @@ async def process_successful_payment(message: Message):
     
     # Начисляем дни (если подписка уже была, дни прибавятся!)
     await set_user_premium(message.from_user.id, is_premium=True, days=days_purchased)
+    await log_payment(message.from_user.id, amount_stars=message.successful_payment.total_amount)
     
     await message.answer(
         f"✨ <b>Тайные знания открыты!</b>\n\n"
