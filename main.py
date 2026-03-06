@@ -16,6 +16,7 @@ from bot.handlers.payments import router as payments_router
 from bot.handlers.admin.panel import router as admin_panel_router
 from bot.handlers.admin.broadcast import router as admin_broadcast_router
 from bot.handlers.admin.manage import router as admin_manage_router
+from bot.handlers.user import numerology
 
 # Загружаем переменные из .env
 load_dotenv()
@@ -47,6 +48,7 @@ async def main():
     dp.include_router(start_router)
     # Подключаем роутер с командами для расклада Таро
     dp.include_router(tarot_router)
+    dp.include_router(numerology.router)
 
     dp.include_router(payments_router)
 
