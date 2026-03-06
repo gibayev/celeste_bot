@@ -8,7 +8,6 @@ def get_categories_kb() -> InlineKeyboardMarkup:
     """Шаг 1: Выбор сферы (категории) вопроса"""
     builder = InlineKeyboardBuilder()
     
-    # Расширенный список категорий для более точной настройки ИИ
     cats = [
         ("🌌 Общие вопросы", "cat_general"),
         ("❤️ Любовь и отношения", "cat_love"),
@@ -49,8 +48,6 @@ def get_post_reading_kb() -> InlineKeyboardMarkup:
     builder.row(InlineKeyboardButton(text="🔮 Задать новый вопрос", callback_data="back_to_categories"))
     
     return builder.as_markup()
-
-# --- СЛЕДУЮЩИЕ ФУНКЦИИ МЫ СОХРАНЯЕМ ДЛЯ РУЧНОГО РЕЖИМА И АДМИНКИ ---
 
 def get_spreads_by_category_kb(category_id: str) -> InlineKeyboardMarkup:
     """Выбор расклада (если пользователь захочет выбрать сам)"""
@@ -112,14 +109,21 @@ def get_numerology_main_kb(has_birth_date: bool) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     
     if not has_birth_date:
-        # Пользователь новый, нужно узнать его дату
         builder.row(InlineKeyboardButton(text="✨ Мое Число Судьбы (Бесплатно)", callback_data="num_my_path_new"))
     else:
-        # Дата уже есть в БД
         builder.row(InlineKeyboardButton(text="✨ Мое Число Судьбы", callback_data="num_my_path_saved"))
         builder.row(InlineKeyboardButton(text="👑 Рассчитать для другого", callback_data="num_other_path"))
-        builder.row(InlineKeyboardButton(text="⚙️ Изменить мою дату", callback_data="num_change_date"))
+        # КНОПКА "ИЗМЕНИТЬ ДАТУ" УДАЛЕНА ДЛЯ ЗАЩИТЫ ОТ АБУЗА
         
+    return builder.as_markup()
+
+def get_date_confirm_kb() -> InlineKeyboardMarkup:
+    """Клавиатура подтверждения своей даты рождения (защита от ошибки)"""
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text="✅ Подтвердить", callback_data="confirm_date_yes"),
+        InlineKeyboardButton(text="❌ Изменить", callback_data="num_my_path_new")
+    )
     return builder.as_markup()
 
 def get_numerology_post_kb() -> InlineKeyboardMarkup:

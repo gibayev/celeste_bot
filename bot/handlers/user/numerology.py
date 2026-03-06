@@ -7,7 +7,12 @@ from aiogram.fsm.state import StatesGroup, State
 from services.numerology_engine import calculate_life_path_number
 from services.gemini_api import generate_numerology_reading
 from db.crud import get_user, update_user_birth_date
-from bot.keyboards.inline import get_numerology_main_kb, get_numerology_post_kb, get_premium_plans_kb
+from bot.keyboards.inline import (
+    get_numerology_main_kb, 
+    get_numerology_post_kb, 
+    get_premium_plans_kb, 
+    get_date_confirm_kb
+)
 
 router = Router()
 
@@ -58,7 +63,7 @@ async def back_to_numerology_menu(callback: types.CallbackQuery, state: FSMConte
 
 @router.callback_query(F.data.in_(["num_my_path_new", "num_change_date"]))
 async def ask_my_date(callback: types.CallbackQuery, state: FSMContext):
-    """Спрашиваем дату для самого пользователя (сохраним в БД)"""
+    """Спрашиваем дату для самого пользователя (с последующим сохранением)"""
     await callback.message.edit_text(
         "✨ Напиши свою дату рождения в формате <b>ДД.ММ.ГГГГ</b> (например, 15.04.1995):",
         parse_mode="HTML"
@@ -71,7 +76,7 @@ async def calculate_saved_date(callback: types.CallbackQuery):
     user = await get_user(callback.from_user.id)
     
     if not user or not user.birth_date:
-        return await callback.answer("⚠️ Твоя дата не найдена. Нажми 'Изменить мою дату'.", show_alert=True)
+        return await callback.answer("⚠️ Твоя дата не найдена.", show_alert=True)
     
     await callback.message.delete()
     await process_and_send_reading(callback.message, user.birth_date)
@@ -100,7 +105,7 @@ async def ask_other_date(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(NumerologyState.waiting_for_other_date)
 
 # ==========================================
-# 3. ВВОД ДАТЫ (FSM) И ГЕНЕРАЦИЯ ОТВЕТА
+# 3. ВВОД ДАТЫ (FSM) И ПОДТВЕРЖДЕНИЕ
 # ==========================================
 
 @router.message(NumerologyState.waiting_for_my_date)
@@ -114,15 +119,45 @@ async def process_date_input(message: types.Message, state: FSMContext):
     
     current_state = await state.get_state()
     
-    # Если это дата самого юзера — сохраняем в базу на будущее
     if current_state == NumerologyState.waiting_for_my_date:
-        await update_user_birth_date(message.from_user.id, date_str)
+        # Сохраняем дату временно в стейт и просим подтвердить
+        await state.update_data(temp_date=date_str)
+        await message.answer(
+            f"⚠️ <b>Внимание!</b>\n\n"
+            f"Ты ввел(а) дату: <b>{date_str}</b>\n"
+            f"Эта дата закрепится за твоим профилем навсегда для бесплатных расчетов. "
+            f"Изменить её позже будет нельзя.\n\n"
+            f"<i>Всё верно?</i>",
+            parse_mode="HTML",
+            reply_markup=get_date_confirm_kb()
+        )
+    else:
+        # Это Premium-запрос для другого человека, считаем сразу без сохранения
+        await state.clear()
+        await process_and_send_reading(message, date_str)
+
+
+@router.callback_query(F.data == "confirm_date_yes")
+async def confirm_my_date_yes(callback: types.CallbackQuery, state: FSMContext):
+    """Пользователь подтвердил свою дату рождения"""
+    data = await state.get_data()
+    date_str = data.get("temp_date")
+    
+    if not date_str:
+        return await callback.answer("⏳ Время ожидания истекло. Пожалуйста, начни заново.", show_alert=True)
         
+    # Сохраняем дату в БД окончательно
+    await update_user_birth_date(callback.from_user.id, date_str)
     await state.clear()
     
-    # Запускаем тяжелую логику расчета и ИИ
-    await process_and_send_reading(message, date_str)
+    await callback.message.delete()
+    # Передаем callback.message, чтобы бот ответил в чат
+    await process_and_send_reading(callback.message, date_str)
 
+
+# ==========================================
+# 4. ГЕНЕРАЦИЯ ОТВЕТА (ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ)
+# ==========================================
 
 async def process_and_send_reading(message: types.Message, date_str: str):
     """Вспомогательная функция: крутит спиннер, считает цифры, стучится в ИИ и выдает результат"""
@@ -138,7 +173,7 @@ async def process_and_send_reading(message: types.Message, date_str: str):
         
         # 3. Красивый вывод с кнопкой "Назад"
         result_text = (
-            f"🌟 <b>Твое Число Жизненного Пути: {life_path_number}</b> "
+            f"🌟 <b>Число Жизненного Пути: {life_path_number}</b> "
             f"(по дате {date_str})\n\n"
             f"{reading}"
         )
