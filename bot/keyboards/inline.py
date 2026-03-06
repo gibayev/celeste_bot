@@ -23,7 +23,7 @@ def get_categories_kb() -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 def get_gender_kb() -> InlineKeyboardMarkup:
-    """Шаг 2: Выбор пола для корректного обращения Селесты"""
+    """Шаг 2: Выбор пола для корректного обращения Селесты (для старых функций)"""
     builder = InlineKeyboardBuilder()
     builder.row(
         InlineKeyboardButton(text="🙋‍♂️ Мужчина", callback_data="gender_male"),
@@ -98,7 +98,7 @@ def get_premium_plans_kb() -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 # ==========================================
-# НОВЫЕ ФУНКЦИИ ДЛЯ НУМЕРОЛОГИИ
+# ФУНКЦИИ ДЛЯ НУМЕРОЛОГИИ И ОНБОРДИНГА
 # ==========================================
 
 def get_numerology_main_kb(has_birth_date: bool) -> InlineKeyboardMarkup:
@@ -113,7 +113,6 @@ def get_numerology_main_kb(has_birth_date: bool) -> InlineKeyboardMarkup:
     else:
         builder.row(InlineKeyboardButton(text="✨ Мое Число Судьбы", callback_data="num_my_path_saved"))
         builder.row(InlineKeyboardButton(text="👑 Рассчитать для другого", callback_data="num_other_path"))
-        # КНОПКА "ИЗМЕНИТЬ ДАТУ" УДАЛЕНА ДЛЯ ЗАЩИТЫ ОТ АБУЗА
         
     return builder.as_markup()
 
@@ -130,4 +129,14 @@ def get_numerology_post_kb() -> InlineKeyboardMarkup:
     """Кнопки после расчета нумерологии"""
     builder = InlineKeyboardBuilder()
     builder.row(InlineKeyboardButton(text="⬅️ Меню Нумерологии", callback_data="back_to_numerology"))
+    return builder.as_markup()
+
+def get_onboarding_gender_kb() -> InlineKeyboardMarkup:
+    """Клавиатура для выбора пола при первом знакомстве (Onboarding)"""
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text="🙋‍♂️ Парень", callback_data="onboard_gender_male"),
+        InlineKeyboardButton(text="🙋‍♀️ Девушка", callback_data="onboard_gender_female")
+    )
+    builder.row(InlineKeyboardButton(text="✨ Оставим в тайне", callback_data="onboard_gender_neutral"))
     return builder.as_markup()

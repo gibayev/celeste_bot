@@ -91,7 +91,7 @@ async def log_payment(telegram_id: int, amount_stars: int):
         await session.commit()
 
 # ==========================================
-# НОВЫЕ ФУНКЦИИ ДЛЯ НУМЕРОЛОГИИ / ЭЗОТЕРИКИ
+# ФУНКЦИИ ДЛЯ ЭЗОТЕРИКИ И ОНБОРДИНГА
 # ==========================================
 
 async def get_user(telegram_id: int) -> User | None:
@@ -106,10 +106,22 @@ async def get_user(telegram_id: int) -> User | None:
 
 async def update_user_birth_date(telegram_id: int, birth_date: str):
     """
-    Сохраняет основную дату рождения пользователя в БД.
-    Она будет использоваться для бесплатного личного расчета.
+    Точечное обновление даты рождения.
     """
     async with async_session() as session:
         stmt = update(User).where(User.telegram_id == telegram_id).values(birth_date=birth_date)
+        await session.execute(stmt)
+        await session.commit()
+
+async def update_user_onboarding(telegram_id: int, real_name: str, gender: str, birth_date: str):
+    """
+    Сохраняет данные стартовой анкеты (имя, пол, дата рождения) при первом знакомстве.
+    """
+    async with async_session() as session:
+        stmt = update(User).where(User.telegram_id == telegram_id).values(
+            real_name=real_name,
+            gender=gender,
+            birth_date=birth_date
+        )
         await session.execute(stmt)
         await session.commit()
