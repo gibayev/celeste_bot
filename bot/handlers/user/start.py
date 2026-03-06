@@ -6,7 +6,7 @@ from aiogram.fsm.state import StatesGroup, State
 
 from db.crud import get_or_create_user, set_user_premium, update_user_onboarding
 from bot.keyboards.reply import get_main_menu
-from bot.keyboards.inline import get_onboarding_gender_kb
+from bot.keyboards.inline import get_onboarding_gender_kb, get_onboarding_confirm_kb
 from services.helpers import calculate_dynamic_age, get_zodiac_sign
 
 router = Router()
@@ -80,6 +80,7 @@ async def process_onboarding_name(message: types.Message, state: FSMContext):
     )
     await state.set_state(OnboardingState.waiting_for_gender)
 
+
 @router.callback_query(OnboardingState.waiting_for_gender, F.data.startswith("onboard_gender_"))
 async def process_onboarding_gender(callback: types.CallbackQuery, state: FSMContext):
     # Вытаскиваем 'male', 'female' или 'neutral' из callback_data
@@ -94,6 +95,7 @@ async def process_onboarding_gender(callback: types.CallbackQuery, state: FSMCon
     )
     await state.set_state(OnboardingState.waiting_for_birth_date)
 
+
 @router.message(OnboardingState.waiting_for_birth_date)
 async def process_onboarding_birth_date(message: types.Message, state: FSMContext):
     date_str = message.text.strip()
@@ -101,26 +103,81 @@ async def process_onboarding_birth_date(message: types.Message, state: FSMContex
     if not re.match(r"^\d{2}\.\d{2}\.\d{4}$", date_str):
         return await message.answer("⚠️ Пожалуйста, введи дату в правильном формате: <b>ДД.ММ.ГГГГ</b> (например, 15.04.1995)", parse_mode="HTML")
         
-    # Достаем все собранные данные
+    await state.update_data(birth_date=date_str)
+    
+    # Достаем все собранные данные для красивого вывода
     data = await state.get_data()
     real_name = data.get("real_name")
     gender = data.get("gender")
     
-    # Сохраняем все разом в Базу Данных!
-    await update_user_onboarding(message.from_user.id, real_name, gender, date_str)
-    
-    # Вычисляем плюшки для вау-эффекта
-    age = calculate_dynamic_age(date_str)
-    zodiac = get_zodiac_sign(date_str)
+    # Делаем пол читаемым для вывода
+    gender_map = {"male": "🙋‍♂️ Парень", "female": "🙋‍♀️ Девушка", "neutral": "✨ В тайне"}
+    gender_str = gender_map.get(gender, "✨ В тайне")
     
     await message.answer(
+        f"🔮 <b>Давай проверим анкету:</b>\n\n"
+        f"<b>Имя:</b> {real_name}\n"
+        f"<b>Пол:</b> {gender_str}\n"
+        f"<b>Дата рождения:</b> {date_str}\n\n"
+        f"<i>Всё верно?</i>",
+        parse_mode="HTML",
+        reply_markup=get_onboarding_confirm_kb()
+    )
+
+# ==========================================
+# ОБРАБОТКА ПОДТВЕРЖДЕНИЯ АНКЕТЫ
+# ==========================================
+@router.callback_query(F.data == "onboard_confirm_yes")
+async def confirm_onboarding_yes(callback: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    real_name = data.get("real_name")
+    gender = data.get("gender")
+    birth_date = data.get("birth_date")
+    
+    if not birth_date:
+        return await callback.answer("⏳ Время ожидания истекло. Нажми /start заново.", show_alert=True)
+        
+    # Сохраняем все разом в Базу Данных!
+    await update_user_onboarding(callback.from_user.id, real_name, gender, birth_date)
+    
+    # Вычисляем плюшки для вау-эффекта
+    age = calculate_dynamic_age(birth_date)
+    zodiac = get_zodiac_sign(birth_date)
+    
+    await callback.message.edit_text(
         f"Готово! 🎉 Значит, по знаку ты <b>{zodiac}</b>, и тебе <b>{age}</b>!\n\n"
         f"Теперь мы на одной волне. Можешь спрашивать меня о чем угодно, я буду учитывать твою матрицу и энергию.\n\n"
         f"Выбирай, с чего начнем 👇",
-        parse_mode="HTML",
-        reply_markup=get_main_menu()
+        parse_mode="HTML"
     )
+    # Отправляем главное меню отдельным сообщением
+    await callback.message.answer("Главное меню открыто:", reply_markup=get_main_menu())
     await state.clear()
+
+
+@router.callback_query(F.data == "onboard_change_name")
+async def change_onboarding_name(callback: types.CallbackQuery, state: FSMContext):
+    await callback.message.edit_text("<b>Как мне к тебе обращаться?</b> (Напиши свое имя)", parse_mode="HTML")
+    await state.set_state(OnboardingState.waiting_for_name)
+
+
+@router.callback_query(F.data == "onboard_change_gender")
+async def change_onboarding_gender(callback: types.CallbackQuery, state: FSMContext):
+    await callback.message.edit_text(
+        "Подскажи, как мне к тебе обращаться в текстах раскладов?",
+        reply_markup=get_onboarding_gender_kb()
+    )
+    await state.set_state(OnboardingState.waiting_for_gender)
+
+
+@router.callback_query(F.data == "onboard_change_date")
+async def change_onboarding_date(callback: types.CallbackQuery, state: FSMContext):
+    await callback.message.edit_text(
+        "Напиши свою <b>дату рождения</b> в формате ДД.ММ.ГГГГ (например, 15.04.1995):", 
+        parse_mode="HTML"
+    )
+    await state.set_state(OnboardingState.waiting_for_birth_date)
+
 
 # ==========================================
 # СЕКРЕТНЫЕ КОМАНДЫ РАЗРАБОТЧИКА

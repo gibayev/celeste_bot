@@ -23,7 +23,7 @@ def get_categories_kb() -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 def get_gender_kb() -> InlineKeyboardMarkup:
-    """Шаг 2: Выбор пола для корректного обращения Селесты (для старых функций)"""
+    """Шаг 2: Выбор пола (только если юзер не прошел онбординг)"""
     builder = InlineKeyboardBuilder()
     builder.row(
         InlineKeyboardButton(text="🙋‍♂️ Мужчина", callback_data="gender_male"),
@@ -117,7 +117,7 @@ def get_numerology_main_kb(has_birth_date: bool) -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 def get_date_confirm_kb() -> InlineKeyboardMarkup:
-    """Клавиатура подтверждения своей даты рождения (защита от ошибки)"""
+    """Клавиатура подтверждения своей даты рождения в нумерологии"""
     builder = InlineKeyboardBuilder()
     builder.row(
         InlineKeyboardButton(text="✅ Подтвердить", callback_data="confirm_date_yes"),
@@ -139,4 +139,13 @@ def get_onboarding_gender_kb() -> InlineKeyboardMarkup:
         InlineKeyboardButton(text="🙋‍♀️ Девушка", callback_data="onboard_gender_female")
     )
     builder.row(InlineKeyboardButton(text="✨ Оставим в тайне", callback_data="onboard_gender_neutral"))
+    return builder.as_markup()
+
+def get_onboarding_confirm_kb() -> InlineKeyboardMarkup:
+    """Клавиатура для финального подтверждения анкеты (Onboarding)"""
+    builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text="✅ Всё верно!", callback_data="onboard_confirm_yes"))
+    builder.row(InlineKeyboardButton(text="📝 Изменить имя", callback_data="onboard_change_name"))
+    builder.row(InlineKeyboardButton(text="🚻 Изменить пол", callback_data="onboard_change_gender"))
+    builder.row(InlineKeyboardButton(text="📅 Изменить дату", callback_data="onboard_change_date"))
     return builder.as_markup()
