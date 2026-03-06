@@ -5,7 +5,7 @@ def get_main_menu():
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             # Первый ряд кнопок
-            [KeyboardButton(text="🔮 Расклад Таро"), KeyboardButton(text="✨ Матрица Судьбы")],
+            [KeyboardButton(text="🔮 Расклад Таро"), KeyboardButton(text="🔢 Нумерология")],
             # Второй ряд кнопок
             [KeyboardButton(text="🌟 Гороскоп на день"), KeyboardButton(text="👑 Premium")],
         ],

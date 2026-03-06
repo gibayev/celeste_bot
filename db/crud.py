@@ -89,3 +89,27 @@ async def log_payment(telegram_id: int, amount_stars: int):
         payment = Payment(telegram_id=telegram_id, amount_stars=amount_stars)
         session.add(payment)
         await session.commit()
+
+# ==========================================
+# НОВЫЕ ФУНКЦИИ ДЛЯ НУМЕРОЛОГИИ / ЭЗОТЕРИКИ
+# ==========================================
+
+async def get_user(telegram_id: int) -> User | None:
+    """
+    Легкая функция чтения данных пользователя (без обновления last_active).
+    Идеально подходит для проверок статуса (premium, birth_date и т.д.)
+    """
+    async with async_session() as session:
+        query = select(User).where(User.telegram_id == telegram_id)
+        result = await session.execute(query)
+        return result.scalar_one_or_none()
+
+async def update_user_birth_date(telegram_id: int, birth_date: str):
+    """
+    Сохраняет основную дату рождения пользователя в БД.
+    Она будет использоваться для бесплатного личного расчета.
+    """
+    async with async_session() as session:
+        stmt = update(User).where(User.telegram_id == telegram_id).values(birth_date=birth_date)
+        await session.execute(stmt)
+        await session.commit()

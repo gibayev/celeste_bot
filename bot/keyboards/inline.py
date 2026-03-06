@@ -99,3 +99,31 @@ def get_premium_plans_kb() -> InlineKeyboardMarkup:
     builder.row(InlineKeyboardButton(text="1 год (1400 ⭐️) 👑", callback_data="buy_premium_365"))
     
     return builder.as_markup()
+
+# ==========================================
+# НОВЫЕ ФУНКЦИИ ДЛЯ НУМЕРОЛОГИИ
+# ==========================================
+
+def get_numerology_main_kb(has_birth_date: bool) -> InlineKeyboardMarkup:
+    """
+    Главное меню нумерологии. 
+    Меняет кнопки в зависимости от того, заполнена ли анкета.
+    """
+    builder = InlineKeyboardBuilder()
+    
+    if not has_birth_date:
+        # Пользователь новый, нужно узнать его дату
+        builder.row(InlineKeyboardButton(text="✨ Мое Число Судьбы (Бесплатно)", callback_data="num_my_path_new"))
+    else:
+        # Дата уже есть в БД
+        builder.row(InlineKeyboardButton(text="✨ Мое Число Судьбы", callback_data="num_my_path_saved"))
+        builder.row(InlineKeyboardButton(text="👑 Рассчитать для другого", callback_data="num_other_path"))
+        builder.row(InlineKeyboardButton(text="⚙️ Изменить мою дату", callback_data="num_change_date"))
+        
+    return builder.as_markup()
+
+def get_numerology_post_kb() -> InlineKeyboardMarkup:
+    """Кнопки после расчета нумерологии"""
+    builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text="⬅️ Меню Нумерологии", callback_data="back_to_numerology"))
+    return builder.as_markup()

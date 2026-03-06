@@ -23,6 +23,9 @@ class User(Base):
     daily_limit_count = Column(Integer, default=0)
     last_limit_reset = Column(DateTime, default=datetime.now)
 
+    # Эзотерические данные пользователя (НОВОЕ)
+    birth_date = Column(String, nullable=True)  # Формат: "ДД.ММ.ГГГГ"
+
 # Таблица для учета доходов (Звезды)
 class Payment(Base):
     __tablename__ = 'payments'

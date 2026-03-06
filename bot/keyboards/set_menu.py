@@ -8,7 +8,7 @@ async def set_main_menu(bot: Bot):
     main_menu_commands = [
         BotCommand(command='/start', description='🔮 Перезапустить оракула'),
         BotCommand(command='/tarot', description='🃏 Расклад Таро'),
-        BotCommand(command='/matrix', description='✨ Матрица Судьбы'),
+        BotCommand(command='/numerology', description='🔢 Нумерология'),
         BotCommand(command='/horoscope', description='🌟 Гороскоп на день'),
         BotCommand(command='/premium', description='👑 Управление Premium'),
     ]
